@@ -36,10 +36,11 @@ class Socketcand_Socket(StreamSocket):
         self.start_rawmode()
 
     def start_rawmode(self):
-        super().send("< open vcan0 >".encode(encoding="ascii"))
+        super().send(("< open " + self.riface + " >").encode(encoding="ascii"))
         msg = self.recv(start_msg=True)
         if str(msg) != str(b'< ok >'):
-            print("Error opening vcan0")
+            print("Could not open " + self.riface)
+            return
 
         super().send("< rawmode >".encode(encoding="ascii"))
         msg = self.recv(start_msg=True)
@@ -70,9 +71,8 @@ class Socketcand_Socket(StreamSocket):
             id = i.split()[1]
             id = "0x" + id
             data = i.split()[3].encode(encoding='ascii')
-            pkts.append(CAN(identifier=id, data=data))
-
-        return pkts
+            pkts.append(CAN(identifier=int(id, 16), data=data, length=len(data)))
+        return pkts[0]
 
     def send(self, x):
         if not isinstance(x, CAN):
